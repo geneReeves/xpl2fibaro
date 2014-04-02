@@ -47,16 +47,20 @@ resp = requests.get(url=url_vdevices, auth=(user, passwd))
 data = json.loads(resp.content)
 
 for device in data:
-    idThDevice = re.search('-- idTh (.*)\n', device['properties']['mainLoop'])
+    idRfxDevice = re.search('-- idRfx (.*)\n', device['properties']['mainLoop'])
 
     try:
-        idTh = idThDevice.group(1)
+        idRfx = idRfxDevice.group(1)
     except:
         ""
     else:
         print 'delete device ' + str(device['id'])
         deleteDevice(device['id'])
         print 'delete global variable'
-        deleteGlobalVariable('temp_' + idTh)
-        deleteGlobalVariable('humidity_' + idTh)
-        deleteGlobalVariable('battery_' + idTh)
+        deleteGlobalVariable('temp_' + idRfx)
+        deleteGlobalVariable('humidity_' + idRfx)
+        deleteGlobalVariable('battery_' + idRfx)
+        deleteGlobalVariable('rainrate_' + idRfx)
+        deleteGlobalVariable('raintotal_' + idRfx)
+        deleteGlobalVariable('energy_' + idRfx)
+        deleteGlobalVariable('power_' + idRfx)
