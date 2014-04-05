@@ -263,5 +263,7 @@ while 1 == 1:
                     if xpl:
                         print data
 
-                payload = {'name': dtype.group(1) + '_' + idRfx, 'value': value.group(1)}
-                post = requests.post(url=url_variables, auth=(user, passwd), data=payload)
+                payload = { 'name': dtype.group(1) + '_' + idRfx, 'value': value.group(1) }
+                variables = requests.post(url=url_variables, auth=(user, passwd), data=payload)
+                if variables.status_code == 409:
+                    variables = requests.put(url=url_variables, auth=(user, passwd), data=json.dumps(payload))
