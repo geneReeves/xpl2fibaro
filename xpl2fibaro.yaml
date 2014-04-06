@@ -1,0 +1,62 @@
+fibaro:
+  ip: '192.168.1.160'
+  user: 'admin'
+  passwd: 'admin'
+devices:
+  '0x2202':
+    name: 'Température'
+    icon: 1019
+    rows:
+      - name: 'temp'
+        caption: 'T°'
+        unit: '°C'
+        main: true
+      - name: 'humidity'
+        caption: 'Humidité'
+        unit: '%'
+  '0x2002':
+    name: 'Température'
+    icon: 1019
+    rows:
+      - name: 'temp'
+        caption: 'T°'
+        unit: '°C'
+        main: true
+      - name: 'humidity'
+        caption: 'Humidité'
+        unit: '%'
+  '0xfb01':
+    name: 'Température'
+    icon: 1019
+    rows:
+      - name: 'temp'
+        caption: 'T°'
+        unit: '°C'
+        main: true
+      - name: 'humidity'
+        caption: 'Humidité'
+        unit: '%'
+  '0xf601':
+    name: 'Température'
+    icon: 1019
+    rows:
+      - name: 'temp'
+        caption: 'T°'
+        unit: '°C'
+        main: true
+  '0x9e00':
+    name: 'Pluviomètre'
+    icon: 1056
+    rows:
+      - name: 'rainrate'
+        caption: 'En ce moment'
+        unit: 'mm/h'
+        main: true
+  '0x3072':
+    name: 'Electricité'
+    icon: 1070
+    rows:
+      - name: 'power'
+        caption: 'En ce moment'
+        unit: 'kW/h'
+        main: true

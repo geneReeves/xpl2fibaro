@@ -7,19 +7,20 @@ import select
 import re
 import socket
 import sys
+import yaml
+
+# YAML config
+conf = file('xpl2fibaro.yaml', 'r')
+conf = yaml.load(conf)
 
 # API URLS
-fibaro_ip = '192.168.1.160'
+fibaro_ip = conf['fibaro']['ip']
 url_devices = 'http://' + fibaro_ip + '/api/devices'
 url_vdevices = 'http://' + fibaro_ip + '/api/virtualDevices'
 url_variables = 'http://' + fibaro_ip + '/api/globalVariables'
 # API log/pass
-user = 'admin'
-passwd = 'admin'
-# HC2 ICONS
-temp_icon = 1019
-rain_icon = 1056
-elec_icon = 1070
+user = conf['fibaro']['user']
+passwd = conf['fibaro']['passwd']
 
 # XPL
 buff = 1500
@@ -45,7 +46,7 @@ def checkIfDeviceNotExist(device):
         data = json.loads(resp.content)
         for vdevice in data:
             idRfxDevice = re.search('-- idRfx (.*)\n',
-                                   vdevice['properties']['mainLoop'])
+                                    vdevice['properties']['mainLoop'])
 
             try:
                 idRfxDevice.group(1)
@@ -55,8 +56,8 @@ def checkIfDeviceNotExist(device):
                 if device == idRfxDevice.group(1):
                     if device not in local_cache:
                         local_cache.append(device)
-                    return False
-                    break
+                        return False
+                        break
 
         return True
 
@@ -103,6 +104,7 @@ while 1 == 1:
         else:
             if xpl:
                 print data
+
             device = re.search('device=(\S+)[0-9] (\S+)', data)
             idRfx = device.group(2)
 
@@ -115,149 +117,92 @@ while 1 == 1:
                 print idRfx + ' - ' + dtype.group(1) + ' - ' + value.group(1)
 
                 if checkIfDeviceNotExist(idRfx) and not noop:
-                    # device idRfx doest not exist
-                    payload = {'name': 'ToSet'}
-
-                    newdevice = requests.post(url=url_vdevices,
-                                              auth=(user, passwd),
-                                              data=payload)
-
-                    newdevice = json.loads(newdevice.content)
-                    newdevice_id = str(newdevice['id'])
-                    if debug:
-                        print 'New device created : ' + newdevice_id
-
-                    newDeviceDataTh = {
-                        "id": int(newdevice_id),
-                        "name": "Température",
-                        "properties":
-                        {
-                            "deviceIcon": temp_icon,
-                            "currentIcon": "0",
-                            "mainLoop": "-- idRfx " + idRfx + "\nlocal selfId = fibaro:getSelfId()\nlocal temp = fibaro:getGlobal(\"temp_" + idRfx + "\")\nlocal humidity = fibaro:getGlobal(\"humidity_" + idRfx + "\")\nlocal battery = fibaro:getGlobal(\"battery_" + idRfx + "\")\nfibaro:call(selfId, \"setProperty\", \"ui.temp.value\", temp..\" °C\")\nfibaro:call(selfId, \"setProperty\", \"ui.humidity.value\", humidity..\" %\")\nfibaro:log(\"Battery : \" .. battery .. \"%\")\nfibaro:debug(\"Sleep 60 sec, then restart\")\nfibaro:sleep(60*1000)",
-                            "saveLogs": "1",
-                            "rows": [
-                                {
-                                    "type": "label",
-                                    "elements": [
-                                        {
-                                            "id": 1,
-                                            "caption": "T°",
-                                            "name": "temp",
-                                            "main": True
-                                        }
-                                    ]
-                                },
-                                {
-                                    "type": "label",
-                                    "elements": [
-                                        {
-                                            "id": 2,
-                                            "caption": "Humidité",
-                                            "name": "humidity",
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    }
-
-                    newDeviceDataTemp = {
-                        "id": int(newdevice_id),
-                        "name": "Température",
-                        "properties":
-                        {
-                            "deviceIcon": temp_icon,
-                            "currentIcon": "0",
-                            "mainLoop": "-- idRfx " + idRfx + "\nlocal selfId = fibaro:getSelfId()\nlocal temp = fibaro:getGlobal(\"temp_" + idRfx + "\")\nlocal battery = fibaro:getGlobal(\"battery_" + idRfx + "\")\nfibaro:call(selfId, \"setProperty\", \"ui.temp.value\", temp..\" °C\")\nfibaro:log(\"Battery : \" .. battery .. \"%\")\nfibaro:debug(\"Sleep 60 sec, then restart\")\nfibaro:sleep(60*1000)",
-                            "saveLogs": "1",
-                            "rows": [
-                                {
-                                    "type": "label",
-                                    "elements": [
-                                        {
-                                            "id": 1,
-                                            "caption": "T°",
-                                            "name": "temp",
-                                            "main": True
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    }
-
-                    newDeviceDataRain = {
-                        "id": int(newdevice_id),
-                        "name": "Précipitation",
-                        "properties":
-                        {
-                            "deviceIcon": rain_icon,
-                            "currentIcon": "0",
-                            "mainLoop": "-- idRfx " + idRfx + "\nlocal selfId = fibaro:getSelfId()\nlocal rain = fibaro:getGlobal(\"rainrate_" + idRfx + "\")\nlocal battery = fibaro:getGlobal(\"battery_" + idRfx + "\")\nfibaro:call(selfId, \"setProperty\", \"ui.rain.value\", rain..\" mm/h\")\nfibaro:log(\"Battery : \" .. battery .. \"%\")\nfibaro:debug(\"Sleep 60 sec, then restart\")\nfibaro:sleep(60*1000)",
-                            "saveLogs": "1",
-                            "rows": [
-                                {
-                                    "type": "label",
-                                    "elements": [
-                                        {
-                                            "id": 1,
-                                            "caption": "Pluie mm/h",
-                                            "name": "rain",
-                                            "main": True
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    }
-
-                    newDeviceDataElec = {
-                        "id": int(newdevice_id),
-                        "name": "Consommation électrique",
-                        "properties":
-                        {
-                            "deviceIcon": elec_icon,
-                            "currentIcon": "0",
-                            "mainLoop": "-- idRfx " + idRfx + "\nlocal selfId = fibaro:getSelfId()\nlocal power = fibaro:getGlobal(\"power_" + idRfx + "\")\nlocal battery = fibaro:getGlobal(\"battery_" + idRfx + "\")\nfibaro:call(selfId, \"setProperty\", \"ui.power.value\", power..\" kW/h\")\nfibaro:log(\"Battery : \" .. battery .. \"%\")\nfibaro:debug(\"Sleep 60 sec, then restart\")\nfibaro:sleep(60*1000)",
-                            "saveLogs": "1",
-                            "rows": [
-                                {
-                                    "type": "label",
-                                    "elements": [
-                                        {
-                                            "id": 1,
-                                            "caption": "Conso kW/h",
-                                            "name": "power",
-                                            "main": True
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    }
-
-
-                    if device.group(1) == 'th':
-                        newDeviceData = newDeviceDataTh
-                    elif device.group(1) == 'temp':
-                        newDeviceData = newDeviceDataTemp
-                    elif device.group(1) == 'rain':
-                        newDeviceData = newDeviceDataRain
-                    elif device.group(1) == 'elec':
-                        newDeviceData = newDeviceDataElec
-
-                    if debug:
-                        print 'json : ' + json.dumps(newDeviceData)
-
-                    newdevice = requests.put(url=url_vdevices,
-                                             auth=(user, passwd),
-                                             data=json.dumps(newDeviceData))
-
-                    if newdevice.status_code == 200:
-                        local_cache.append(idRfx)
+                    try:
+                        conf['devices'][idRfx]
+                    except:
+                        print 'Please configure a device with ' + idRfx + ' id...'
                     else:
-                        print 'Problem with fibaro API - HTTP CODE : ' + newdevice.status_code
+                        # device idRfx doest not exist
+                        payload = {'name': 'ToSet'}
+
+                        newdevice = requests.post(url=url_vdevices,
+                                                  auth=(user, passwd),
+                                                  data=payload)
+
+                        newdevice = json.loads(newdevice.content)
+                        newdevice_id = str(newdevice['id'])
+                        if debug:
+                            print 'New device created : ' + newdevice_id
+                        newDeviceData = {
+                            "id": int(newdevice_id),
+                            "name": conf['devices'][idRfx]['name'],
+                            "properties":
+                            {
+                                "deviceIcon": conf['devices'][idRfx]['icon'],
+                            }
+                        }
+
+                        rows = []
+                        i = 0
+
+                        mainLoop_head = "-- idRfx " + idRfx + "\nlocal selfId = fibaro:getSelfId()"
+
+                        mainLoop_battery = """
+                        local battery = fibaro:getGlobal('battery_%(idRfx)s')
+                        """ % {'idRfx': idRfx}
+
+                        mainLoop_foot = """
+                        fibaro:log("Battery : " .. battery .. "%")
+                        fibaro:debug('Sleep 60 sec, then restart')
+                        fibaro:sleep(60*1000)
+                        """
+
+                        mainLoop_devices = []
+
+
+                        for n in conf['devices'][idRfx]['rows']:
+                            name = conf['devices'][idRfx]['rows'][i]['name']
+                            main = conf['devices'][idRfx]['rows'][i].get('main', False)
+                            caption = conf['devices'][idRfx]['rows'][i]['caption']
+                            unit = conf['devices'][idRfx]['rows'][i]['unit']
+
+                            tmp_row = {
+                                "type": "label",
+                                "elements": [
+                                    {
+                                        "id": i,
+                                        "caption": caption,
+                                        "name": name,
+                                        "main": main
+                                    }
+                                ]
+                            }
+
+                            mainLoop_temp = """
+                            local %(name)s = fibaro:getGlobal('%(name)s_%(idRfx)s')
+                            fibaro:call(selfId, "setProperty", "ui.%(name)s.value", %(name)s .. "%(unit)s")
+                            """ % {'name': name, 'idRfx': idRfx, 'unit': unit}
+
+                            i += 1
+                            rows.append(tmp_row)
+                            mainLoop_devices.append(mainLoop_temp)
+
+
+                        newDeviceData['properties']['rows'] = rows
+                        mainLoop = mainLoop_head + mainLoop_battery + ('\n').join(mainLoop_devices) + mainLoop_foot
+                        newDeviceData['properties']['mainLoop'] = re.sub('^\s+', '', mainLoop, flags=re.MULTILINE)
+
+                        if debug:
+                            print 'json : ' + json.dumps(newDeviceData)
+
+                        newdevice = requests.put(url=url_vdevices,
+                                                 auth=(user, passwd),
+                                                 data=json.dumps(newDeviceData))
+
+                        if newdevice.status_code == 200:
+                            local_cache.append(idRfx)
+                        else:
+                            print 'Problem with fibaro API - HTTP CODE : ' + newdevice.status_code
 
                 else:
                     if xpl:
