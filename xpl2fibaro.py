@@ -8,10 +8,15 @@ import re
 import socket
 import sys
 import yaml
+import os
 
 # YAML config
-conf = file('xpl2fibaro.yaml', 'r')
-conf = yaml.load(conf)
+if os.path.exists(os.path.dirname(__file__) + '/xpl2fibaro.yaml'):
+    conf = file(os.path.dirname(__file__) + '/xpl2fibaro.yaml', 'r')
+    conf = yaml.load(conf)
+else:
+    print 'Please add a xpl2fibaro.yaml !'
+    sys.exit(1)
 
 # API URLS
 fibaro_ip = conf['fibaro']['ip']
