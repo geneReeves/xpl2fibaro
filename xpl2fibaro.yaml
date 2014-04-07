@@ -1,3 +1,7 @@
+process:
+  debug: False
+  xpl: False
+  noop: False
 fibaro:
   ip: '192.168.1.160'
   user: 'admin'
