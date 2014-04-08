@@ -1,6 +1,6 @@
 #!/bin/sh
 
-DAEMON=/volume1/web/pyhon/xpl2fibaro.py
+DAEMON=/volume1/web/python/xpl2fibaro.py
 
 case "$1" in
     start)
