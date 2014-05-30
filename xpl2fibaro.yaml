@@ -6,6 +6,13 @@ fibaro:
   ip: '192.168.1.160'
   user: 'admin'
   passwd: 'admin'
+actions:
+  'M4':
+    modules:
+      - 6
+      - 459
+    scene_on:
+      - 23
 devices:
   '0x2202':
     name: 'Température'
